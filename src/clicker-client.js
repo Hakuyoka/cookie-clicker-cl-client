@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const SaveData = require("./SaveData");
+const randCodeGen = require("./RandomEventKeyGen");
 
 const config = {
     headless: false
@@ -30,7 +31,8 @@ async function start() {
         if(shimmer && !exitGoldenCookie) {
             exitGoldenCookie = true;
             console.log("Golden Cookie is appeared!!");
-            console.log("type: aaaaa")
+            randCodeGen.generate();
+            console.log("type: " + randCodeGen.code)
         } else if(!shimmer && exitGoldenCookie) {
             exitGoldenCookie = false;
         }

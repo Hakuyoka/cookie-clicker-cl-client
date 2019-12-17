@@ -1,5 +1,5 @@
 const client = require("./clicker-client");
-
+const randCodeGen = require("./RandomEventKeyGen");
 (async ()=>{
     await client.start();
 
@@ -11,7 +11,7 @@ class CommandExcuter {
             await client.click();
         } else if(command === "exit"){
             process.exit;
-        } else if(command === "aaaa") {
+        } else if(command === randCodeGen.code) {
             await client.clickGolden();
         }
 
