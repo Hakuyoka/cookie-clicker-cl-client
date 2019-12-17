@@ -40,9 +40,9 @@ async function start() {
 }
 
 async function click() {
-    await page.click("#bigCookie")
+    await page.click("#bigCookie");
     await page.evaluate(()=>{
-        console.log(Game.cookies + " + " + Game.computedMouseCps);
+        console.log(Math.floor(Game.cookies) + " + " + Game.computedMouseCps);
     });
     return false
 }
