@@ -10,11 +10,20 @@ class CommandExcuter {
         if(command === "click" || command === ""|| command === "c") {
             await client.click();
         } else if(command === "exit"){
-            process.exit;
+            await client.close();
+            process.exit();
         } else if(command === randCodeGen.code) {
             await client.clickGolden();
+        } else if(command === "available") {
+           let  productions = await client.availableProduction();
+            productions.forEach((product)=>{
+                console.log(product.name, ":",product.price);
+            });
+        } else if(command.startsWith("buy")) {
+            let name = command.replace("buy", "").trim();
+            console.log(name);
+            await client.purchase(name);
         }
-
     }
 }
 
