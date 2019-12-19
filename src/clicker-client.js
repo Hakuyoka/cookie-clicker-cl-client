@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const SaveData = require("./SaveData");
 const randCodeGen = require("./RandomEventKeyGen");
+const Product = require("./model/Product");
 
 const config = {
     headless: false
@@ -16,9 +17,11 @@ const setSaveData = async (page) => {
     }
 };
 
-let page = null;
+let browser;
+let page;
+let goldenCoolieListener;
 async function start() {
-    const browser = await puppeteer.launch(config);
+    browser = await puppeteer.launch(config)
     page = await browser.newPage();
     await page.goto('https://orteil.dashnet.org/cookieclicker/');
     await setSaveData(page);
@@ -26,7 +29,7 @@ async function start() {
 
     let exitGoldenCookie = false;
     page.on('console', consoleObj => console.log(consoleObj.text()));
-    setInterval(async ()=>{
+    goldenCoolieListener = setInterval(async ()=>{
         let shimmer = await page.$("#shimmers .shimmer");
         if(shimmer && !exitGoldenCookie) {
             exitGoldenCookie = true;
@@ -35,7 +38,10 @@ async function start() {
             console.log("type: " + randCodeGen.code)
         } else if(!shimmer && exitGoldenCookie) {
             exitGoldenCookie = false;
+            randCodeGen.generate();
+            console.log("Golden Cookie is dis appeared...")
         }
+
     }, 500);
 }
 
@@ -55,8 +61,49 @@ async function clickGolden() {
     return false
 }
 
+async function availableProduction() {
+    let productionsElement = await page.$$(".product.unlocked.enabled");
+    let productionsPromise = productionsElement.map(async (element)=>{
+        let titleElement = await element.$(".title");
+        let text = await (await titleElement.getProperty('textContent')).jsonValue();
+        let amountElement = await element.$(".price");
+        let price = await (await amountElement.getProperty('textContent')).jsonValue();
+        return new Product(text, price);
+    });
+    return await Promise.all(productionsPromise);
+}
+
+async function purchase(name) {
+    let productionsElement = await page.$$(".product.unlocked.enabled");
+    let productElement = productionsElement.find(async (element)=>{
+        let titleElement = await element.$(".title");
+        let text = await (await titleElement.getProperty('textContent')).jsonValue();
+        return text.toLocaleLowerCase() === name.toLocaleLowerCase();
+    });
+    if(productElement) {
+        console.log("buy " + name + "!");
+        await productElement.click();
+    } else {
+        console.log("Can't buy");
+    }
+}
+
+async function close() {
+    let saveData = await page.evaluate(()=>{
+        Game.WriteSave();
+        return localStorage.getItem('CookieClickerGame');
+    });
+    clearInterval(goldenCoolieListener);
+    new SaveData().save(saveData);
+    await page.close();
+    await browser.close();
+}
+
 module.exports = {
     click,
     start,
-    clickGolden
+    clickGolden,
+    availableProduction,
+    purchase,
+    close
 };
